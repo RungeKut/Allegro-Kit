@@ -10,13 +10,13 @@
   * записи со status: проверено имеют поле verified;
   * внутренние ссылки ведут на существующие файлы;
   * НИ ОДИН файл набора не упоминает изделие или посторонний проект;
-  * на этой машине включён хук commit-msg, который проверяет текст коммита.
+  * на этой машине включён хук commit-msg, который проверяет текст коммита;
+  * для этого клона задан автор коммитов (иначе уходят глобальные — рабочие).
 
-Стоп-слова берутся из двух файлов:
-  tools/stoplist.txt        — общий, лежит в репозитории;
-  tools/stoplist.local.txt  — приметы изделий этой машины, в .gitignore.
-Названия изделий вписываются во ВТОРОЙ: публичный стоп-лист сам по себе
-публикует то, что должен скрывать.
+Стоп-слова — в tools/stoplist.txt. Это ЛОКАЛЬНЫЙ файл: он в .gitignore и в
+репозиторий не попадает — стоп-лист, лежащий в публичном репозитории, сам
+публикует то, что должен скрывать. Поэтому ошибка и отсутствие файла
+(проверять не по чему; его заводит setup.ps1), и его возвращение под git.
 
 С ключом --project к стоп-словам добавляются имя папки проекта и имена
 лежащих в ней файлов плат и схем.
@@ -38,9 +38,8 @@ INDEX = os.path.join(KNOWLEDGE, "INDEX.md")
 REQUIRED = ("id", "title", "status")
 VALID_STATUS = ("проверено", "не проверено", "устарело", "действует")
 
-STOPLISTS = (os.path.join(ROOT, "tools", "stoplist.txt"),
-             os.path.join(ROOT, "tools", "stoplist.local.txt"))
-SKIP = ("tools/stoplist.txt", "tools/stoplist.local.txt")
+STOPLIST = os.path.join(ROOT, "tools", "stoplist.txt")
+SKIP = ("tools/stoplist.txt",)
 TEXT_EXT = (".md", ".py", ".ps1", ".txt", ".il", ".tcl", ".bat", ".cfg",
             ".toml", ".json", ".yml")
 PROJECT_EXT = (".BRD", ".DSN", ".OPJ", ".SCH", ".DRA", ".PAD", ".DBK",
@@ -96,6 +95,40 @@ def hook_enabled():
         return False
 
 
+def local_author():
+    """Автор коммитов, заданный для ЭТОГО клона: (имя, адрес) или None.
+
+    Без локальной настройки git подставляет глобальные — на рабочей машине
+    это рабочее имя и корпоративный адрес, и они уходят в публичную
+    историю. В соседнем наборе так ушли три коммита.
+    """
+    vals = []
+    for key in ("user.name", "user.email"):
+        try:
+            out = subprocess.check_output(
+                ["git", "config", "--local", "--get", key],
+                cwd=ROOT, stderr=subprocess.DEVNULL)
+            vals.append(out.decode("utf-8", "replace").strip())
+        except Exception:
+            return None
+    return tuple(vals) if all(vals) else None
+
+
+def stoplist_tracked():
+    """Лежит ли tools/stoplist.txt под git (а должен быть только локальным).
+
+    .gitignore не мешает вернуть файл через git add -f или слиянием старой
+    ветки; тогда при следующем push приметы изделий уйдут наружу.
+    """
+    try:
+        out = subprocess.check_output(
+            ["git", "ls-files", "--", "tools/stoplist.txt"],
+            cwd=ROOT, stderr=subprocess.DEVNULL)
+        return bool(out.strip())
+    except Exception:
+        return False
+
+
 def repo_files():
     """Все текстовые файлы набора, кроме служебных и самих стоп-листов."""
     out = []
@@ -114,15 +147,16 @@ def repo_files():
 
 
 def stop_words():
-    """Стоп-слова из tools/stoplist.txt и tools/stoplist.local.txt."""
+    """Стоп-слова из локального tools/stoplist.txt."""
+    if not os.path.exists(STOPLIST):
+        return set()
     out = set()
-    for path in STOPLISTS:
-        if not os.path.exists(path):
-            continue
-        for line in read(path).splitlines():
-            line = line.split("#", 1)[0].strip()
-            if line:
-                out.add(line)
+    # utf-8-sig: файл, сохранённый Блокнотом с BOM, не должен дать
+    # стоп-слово из одного невидимого символа
+    for line in io.open(STOPLIST, encoding="utf-8-sig").read().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            out.add(line)
     return out
 
 
@@ -221,14 +255,21 @@ def main(project_dir=None):
                                                                 link))):
                 problems.append("%s: битая ссылка -> %s" % (rel(path), link))
 
+    if not os.path.exists(STOPLIST):
+        problems.append(
+            "нет tools/stoplist.txt — проверять набор не по чему. Файл "
+            "локальный (в .gitignore); заводит его setup.ps1, приметы "
+            "изделий вписываются туда")
+    if stoplist_tracked():
+        problems.append(
+            "tools/stoplist.txt снова под git — при push приметы изделий "
+            "уйдут в публичный репозиторий. Убрать: "
+            "git rm --cached tools/stoplist.txt")
     project = project_words(project_dir)
     if project:
         print("Приметы изделия из папки проекта: %s\n"
               % ", ".join(sorted(project)))
     words = stop_words() | project
-    if not os.path.exists(STOPLISTS[1]):
-        print("Замечание: нет tools/stoplist.local.txt — приметы изделий "
-              "этой машины не проверяются.\n")
     for path in repo_files():
         text = read(path).lower()
         r = os.path.relpath(path, ROOT).replace(os.sep, "/")
@@ -242,6 +283,13 @@ def main(project_dir=None):
             "хук commit-msg не включён на этой машине — текст коммита никто "
             "не проверяет. Лечится: git config core.hooksPath tools/hooks "
             "(её же делает setup.ps1)")
+
+    if local_author() is None:
+        problems.append(
+            "для этого клона не задан автор коммитов — git возьмёт глобальные "
+            "имя и адрес (на рабочей машине — рабочие) и опубликует их. "
+            "Задать: git config user.name \"<публичное имя>\" и "
+            "git config user.email \"<публичный адрес>\" (40-02)")
 
     if problems:
         print("РАСХОЖДЕНИЯ (%d):" % len(problems))

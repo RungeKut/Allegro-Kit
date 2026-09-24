@@ -9,7 +9,8 @@
 #      чтобы скилл подхватывался Claude Code из любого каталога;
 #   3. прописывает переменную ALKIT_HOME в профиль пользователя;
 #   4. включает хук commit-msg, который не пропускает в сообщение коммита
-#      название проектируемого изделия, и заводит пустой локальный стоп-лист;
+#      название проектируемого изделия, заводит локальный стоп-лист
+#      tools\stoplist.txt (он в .gitignore) и напоминает об авторе коммитов;
 #   5. проверяет Python (64-bit) и ставит Pillow — для картинок платы;
 #   6. ищет Cadence SPB и печатает версию Allegro.
 #
@@ -68,15 +69,32 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
     Write-Host "OK   core.hooksPath = tools/hooks (проверка текста коммита)"
     Write-Host "     папку текущего проекта можно добавить к стоп-словам:"
     Write-Host "     git config alkit.project '<путь к папке проекта>'"
+    # Автор коммитов — публичный и только для этого клона: иначе git возьмёт
+    # глобальные рабочие имя и адрес и опубликует их (40-02).
+    Push-Location $root
+    $author = git config --local --get user.email
+    Pop-Location
+    if ($author) {
+        Write-Host "OK   автор коммитов этого клона: $author"
+    } else {
+        Write-Host "НЕТ  автор коммитов не задан — уйдут глобальные (рабочие) имя и адрес."
+        Write-Host "     git config user.name  '<публичное имя>'"
+        Write-Host "     git config user.email '<публичный адрес>'"
+    }
 } else {
     Write-Host "НЕТ  git не найден — хук commit-msg не включён"
 }
-$local = Join-Path $root "tools\stoplist.local.txt"
-if (-not (Test-Path $local)) {
-    $text = "# Приметы изделий этой машины: названия, обозначения, номера.`r`n" +
-            "# Файл в .gitignore и в репозиторий не попадает.`r`n"
-    [IO.File]::WriteAllText($local, $text, (New-Object Text.UTF8Encoding $false))
-    Write-Host "OK   заведён tools\stoplist.local.txt — впишите туда изделие"
+# Стоп-лист локальный: лежащий в репозитории сам публиковал бы названия,
+# которые должен скрывать. Без BOM — Python читает его как UTF-8.
+$stop = Join-Path $root "tools\stoplist.txt"
+if (-not (Test-Path $stop)) {
+    $text = "# Стоп-слова: названия и приметы изделий этой машины.`r`n" +
+            "# Файл ЛОКАЛЬНЫЙ: он в .gitignore и в репозиторий не попадает.`r`n" +
+            "# Строка = подстрока, регистр не важен; # — комментарий.`r`n"
+    [IO.File]::WriteAllText($stop, $text, (New-Object Text.UTF8Encoding $false))
+    Write-Host "OK   заведён tools\stoplist.txt — впишите туда изделие до первого коммита"
+} else {
+    Write-Host "OK   tools\stoplist.txt на месте (локальный, в .gitignore)"
 }
 
 # --- 4. Python -------------------------------------------------------------

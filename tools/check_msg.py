@@ -9,9 +9,9 @@
 
     python tools/check_msg.py .git/COMMIT_EDITMSG
 
-Стоп-слова — tools/stoplist.txt и tools/stoplist.local.txt. Если в конфиге
-репозитория задана папка проекта, к ним добавляются её имя и имена плат и
-схем в ней:
+Стоп-слова — tools/stoplist.txt, локальный файл (в .gitignore). Если в
+конфиге репозитория задана папка проекта, к ним добавляются её имя и имена
+плат и схем в ней:
 
     git config alkit.project "D:/путь/к/папке/проекта"
 """
