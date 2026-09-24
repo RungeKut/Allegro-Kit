@@ -1,0 +1,48 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- вывод тестов и прогонов ---
+tests/vyvod/
+
+# --- приметы изделий этой машины: только локально ---
+tools/stoplist.local.txt
+
+# --- файлы Cadence ---
+# Платы и схемы в репозиторий не кладём: это инструмент, а не архив проектов.
+# Тесты работают на демонстрационных платах из поставки Cadence.
+*.brd
+*.BRD
+*.dra
+*.pad
+*.psm
+*.mcm
+*.sip
+*.dsn
+*.DSN
+*.DBK
+*.opj
+*.olb
+*.lck
+*.jrl
+*.jrl,*
+*.log
+*.log,*
+master.tag
+signoise.run/
+# экспорт
+*.art
+*.stp
+*.STEP
+*.xml
+*.pdf
+*.drl
+*.tap
+
+# --- прочее ---
+*.bak
+Thumbs.db
+desktop.ini
+.DS_Store

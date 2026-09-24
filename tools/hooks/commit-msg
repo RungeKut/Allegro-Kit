@@ -1,0 +1,13 @@
+#!/bin/sh
+# Хук commit-msg: не пропустить название проектируемого изделия в сообщение.
+#
+# Ставится не копированием, а через core.hooksPath (см. tools/setup.ps1),
+# чтобы хук лежал в репозитории и приезжал на все машины вместе с набором.
+#
+# Отключить на один коммит: git commit --no-verify
+root=$(git rev-parse --show-toplevel)
+for py in python python3 py; do
+    command -v "$py" >/dev/null 2>&1 && exec "$py" "$root/tools/check_msg.py" "$1"
+done
+echo "commit-msg: Python не найден, проверка сообщения пропущена" >&2
+exit 0
