@@ -71,7 +71,8 @@ procedure(akFindSym(refdes)
 ; ---------------------------------------------------------------------------
 
 procedure(akShapePts(o)
-  ; вершины внешнего контура полигона (как отдаёт axlPolyFromDB)
+  ; вершины внешнего контура полигона (как отдаёт axlPolyFromDB).
+  ; Вырезы (voids) сюда не попадают: они в ->holes (knowledge 20-04).
   let((r)
     r = errset(axlPolyFromDB(o))
     when(r && car(r) && car(car(r))
