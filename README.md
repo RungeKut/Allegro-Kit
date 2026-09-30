@@ -2,7 +2,8 @@
 
 Инструмент для работы с печатными платами Cadence Allegro и схемами
 OrCAD Capture скриптами: библиотека на Python, база проверенного знания и
-правила её ведения. Подключается к Claude Code как скилл `/allegro`.
+правила её ведения. Подключается к Claude Code как скилл `/allegro` и к
+Kimi Code как `/skill:allegro`.
 
 Соседний набор для SolidWorks — [SolidWorks-Kit](https://github.com/RungeKut/SolidWorks-Kit);
 правила ведения у них общие.
@@ -50,11 +51,18 @@ powershell -ExecutionPolicy Bypass -File tools\setup.ps1
 
 Либо двойной щелчок по `Install-skill.bat`.
 
-Скрипт создаёт junction `~\.claude\skills\allegro` -> `<репозиторий>\skill`,
+Скрипт создаёт junction `~\.claude\skills\allegro` (Claude Code) и
+`~\.kimi-code\skills\allegro` (Kimi Code) -> `<репозиторий>\skill`,
 прописывает `ALKIT_HOME`, включает хук на текст коммита, заводит
 локальный стоп-лист, проверяет Python (**64-bit**), ставит Pillow и
 находит Cadence. Прав администратора не требует. После установки —
-**перезапустить Claude Code**.
+**перезапустить Claude Code / Kimi Code**.
+
+Перезапуск нужен один раз — чтобы агент зарегистрировал скилл. Дальше
+обновления набора (`git pull`) перезапуска не требуют: база знаний,
+библиотека и тело SKILL.md читаются с диска в момент использования.
+Перезапуск понадобится, только если поменялся frontmatter SKILL.md —
+имя или description с триггерами.
 
 Нужны: Cadence SPB с Allegro PCB Editor (проверено на 17.2-2016 S066) и
 лицензия уровня, в котором есть SKILL; Python 3.11+ 64-bit.
@@ -87,7 +95,8 @@ ak.place(r"D:\проект\плата.brd", {"C11": (10.0, 20.0, 90, "top")},
 /allegro сверь схему с платой в D:\Проекты\Плата и нарисуй обе стороны
 ```
 
-Без команды набор подключается сам, когда в запросе есть Allegro, Cadence,
+В Kimi Code то же самое — `/skill:allegro ...`. Без команды набор
+подключается сам, когда в запросе есть Allegro, Cadence,
 OrCAD, Capture, `.brd`, `.dsn`, плата, схема, DRC, Gerber, STEP,
 IPC-2581, SKILL — или ошибки вида «No licenses available», «Failed to
 open design since it is locked».
@@ -137,7 +146,8 @@ open design since it is locked».
 Главное требование — обновлять набор **во время работы**. Скилл и
 библиотека — обычные файлы: правка действует со следующего чтения. MCP
 поднимается при старте сессии, и его изменение требует перезапуска
-Claude Code. Подробный разбор — в README соседнего набора для SolidWorks.
+агента (Claude Code, Kimi Code). Подробный разбор — в README соседнего
+набора для SolidWorks.
 
 ## Что проверено, а что нет
 

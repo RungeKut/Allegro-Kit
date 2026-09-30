@@ -5,6 +5,14 @@
 
 ---
 
+## 2026-09-30 — подключение к Kimi Code
+
+* `tools/setup.ps1` создаёт junction скилла не только в Claude Code
+  (`~/.claude/skills/allegro`), но и в Kimi Code
+  (`~/.kimi-code/skills/allegro`). Frontmatter SKILL.md (name +
+  description) совместим с обоими агентами без изменений; тексты
+  поправлены там, где упоминался только Claude Code.
+
 ## 2026-09-24 — ёмкость между доменами земли
 
 * **20-04**: полигоны с вырезами через `axlPolyFromDB ->holes`, стек из

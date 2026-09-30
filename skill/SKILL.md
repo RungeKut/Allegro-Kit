@@ -6,8 +6,9 @@ description: Печатные платы в Cadence Allegro и схемы OrCAD 
 # Allegro и Capture: платы и схемы скриптами
 
 Набор — git-репозиторий, общий для нескольких машин. Корень находится так:
-переменная `ALKIT_HOME`, иначе `~/.claude/skills/allegro` — junction,
-ведущий в `<корень>/skill`.
+переменная `ALKIT_HOME`, иначе junction `~/.claude/skills/allegro`
+(Claude Code) или `~/.kimi-code/skills/allegro` (Kimi Code) — ведут в
+`<корень>/skill`.
 
 ## ОБЯЗАТЕЛЬНО: синхронизация репозитория
 
@@ -161,7 +162,8 @@ ak.png(b2, r"D:\проект\вывод\верх_v2.png", side="top")
 * Написали функцию, полезную не только этому проекту, — в `alkit`.
 * **После любой из этих правок — коммит и `git push`.**
 
-Файлы обычные, правятся через Write/Edit, перезапуск Claude Code не нужен.
+Файлы обычные, правятся через Write/Edit, перезапуск Claude Code / Kimi
+Code не нужен.
 
 ## Начать новый проект
 
