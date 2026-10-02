@@ -1,14 +1,48 @@
 ---
 name: allegro
-description: Печатные платы в Cadence Allegro и схемы OrCAD Capture скриптами — чтение и правка платы (.brd) без окна и в открытом Allegro, расстановка компонентов, выгрузка компонентов, выводов, цепей, проводников и полигонов, картинка платы, DRC, неразведённые связи, отчёты, Gerber, IPC-2581, STEP, PDF, чтение схемы (.dsn) без Capture и сверка схемы с платой. Используй ВСЕГДА, когда речь об Allegro, Cadence, OrCAD, Capture, PCB Editor, SKILL/AXL, файлах .brd/.dsn/.dra/.opj; когда просят посмотреть, проверить, разобрать, расставить, переместить, повернуть компоненты платы, сверить схему с платой, найти расхождения, выгрузить перечень элементов, Gerber, STEP или IPC-2581 платы; а также при ошибках «No licenses available», «Failed to open design since it is locked», «Starting new design», «*Error* eval: undefined function», падении allegro.exe с кодом -1073741819. Содержит библиотеку alkit и базу проверенного опытом знания.
+description: "Печатные платы в Cadence Allegro и схемы OrCAD Capture скриптами — чтение и правка платы (.brd) без окна и в открытом Allegro, расстановка компонентов, выгрузка компонентов, выводов, цепей, проводников и полигонов, картинка платы, DRC, неразведённые связи, отчёты, Gerber, IPC-2581, STEP, PDF, чтение схемы (.dsn) без Capture и сверка схемы с платой. Используй ВСЕГДА, когда речь об Allegro, Cadence, OrCAD, Capture, PCB Editor, SKILL/AXL, файлах .brd/.dsn/.dra/.opj; когда просят посмотреть, проверить, разобрать, расставить, переместить, повернуть компоненты платы, сверить схему с платой, найти расхождения, выгрузить перечень элементов, Gerber, STEP или IPC-2581 платы; а также при ошибках «No licenses available», «Failed to open design since it is locked», «Starting new design», «*Error* eval: undefined function», падении allegro.exe с кодом -1073741819. Содержит библиотеку alkit и базу проверенного опытом знания."
 ---
 
 # Allegro и Capture: платы и схемы скриптами
 
 Набор — git-репозиторий, общий для нескольких машин. Корень находится так:
 переменная `ALKIT_HOME`, иначе junction `~/.claude/skills/allegro`
-(Claude Code) или `~/.kimi-code/skills/allegro` (Kimi Code) — ведут в
-`<корень>/skill`.
+(Claude Code), `~/.kimi-code/skills/allegro` (Kimi Code) или
+`~/.config/opencode/skills/allegro` (opencode) — ведут в `<корень>/skill`.
+
+## Установка на новой машине
+
+Задача вида «поставь набор, вот ссылка на GitHub» выполняется так:
+
+```powershell
+git clone https://github.com/RungeKut/Allegro-Kit.git
+cd Allegro-Kit
+powershell -ExecutionPolicy Bypass -File tools\setup.ps1
+```
+
+Скрипт сам создаёт junction'ы к Claude Code и Kimi Code, ставит `ALKIT_HOME`
+в профиль пользователя, включает хук `commit-msg`, заводит локальный
+`tools\stoplist.txt`, проверяет Python и ставит зависимости. Прав
+администратора не требует.
+
+**Для opencode junction создаётся отдельно** — одной командой:
+
+```powershell
+cmd /c mklink /J "$env:USERPROFILE\.config\opencode\skills\allegro" `
+    "<корень набора>\skill"
+```
+
+Четыре ошибки, на которые уходит время:
+
+| Ошибка | Что будет | Как правильно |
+|---|---|---|
+| Junction на **корень репозитория**, а не на `<корень>\skill` | opencode не найдёт `SKILL.md` (в каталоге скила он обязан лежать прямо), либо в агент протащится весь репозиторий вместе с `.git` | цель junction — `<корень>\skill` |
+| **Копия** набора в `skills/` вместо junction | правка в одном агенте не появится в другом; расхождение всплывёт через месяцы | только junction |
+| `description` без кавычек, а в нём есть `: ` (двоеточие с пробелом) | YAML-парсер рвёт значение — скилл молча не загружается, его просто нет в списке агента | значение обернуть в кавычки |
+| Проверка junction через `Get-ChildItem -Recurse` | PowerShell 5.1 не заходит в junction: вывод пустой, junction кажется сломанным | `Test-Path` на конкретный файл |
+
+Подробности установки и сеть junction'ов — `knowledge/40_СРЕДА/40-01`,
+«Подключение агентов».
 
 ## ОБЯЗАТЕЛЬНО: синхронизация репозитория
 
